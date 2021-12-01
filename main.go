@@ -40,7 +40,7 @@ func main() {
 	}
 
 	var m metadata
-	if err = json.Unmarshal(md, m); err != nil {
+	if err = json.Unmarshal(md, &m); err != nil {
 		log.Fatalf("failed to unmarshal instance metadata: %v", err)
 	}
 
