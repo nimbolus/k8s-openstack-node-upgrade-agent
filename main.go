@@ -83,6 +83,7 @@ func main() {
 	flag.Parse()
 
 	if *verify {
+		log.Printf("verifying cluster health for %s", duration.String())
 		if err := verifyClusterHealth(*duration); err != nil {
 			log.Fatal(err)
 		}
