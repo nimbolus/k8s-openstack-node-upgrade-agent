@@ -33,9 +33,9 @@ spec:
   drain:
     force: true
   prepare:
-    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent:5d4d45be
+    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent:v0.1.0
     # verify cluster health for one minute before upgrading the next node
     args: ["-verify", "-duration=1m"]
   upgrade:
-    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent:5d4d45be
+    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent:v0.1.0
 ```
