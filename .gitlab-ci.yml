@@ -1,0 +1,66 @@
+stages:
+  - compile
+  - build
+  - test
+
+# templates
+.kanikoJob: &kanikoJob
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+
+# jobs
+compile:
+  stage: compile
+  image: golang:1.16-alpine
+  script:
+    - GOOS=linux CGO_ENABLED=0 go build -o k8s-node-upgrade-agent
+  artifacts:
+    name: ${CI_PROJECT_NAME}-${CI_COMMIT_REF_NAME}
+    paths:
+      - k8s-node-upgrade-agent
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
+
+buildImage:
+  stage: build
+  <<: *kanikoJob
+  script:
+    - /kaniko/executor --cache --context $CI_PROJECT_DIR
+      --dockerfile $CI_PROJECT_DIR/Dockerfile
+      --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  needs:
+    - job: compile
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+tagImage:
+  stage: build
+  <<: *kanikoJob
+  script:
+    - echo "FROM $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA" | /kaniko/executor --context $CI_PROJECT_DIR 
+      --dockerfile /dev/stdin
+      --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG
+  rules:
+    - if: "$CI_COMMIT_TAG"
+
+scanImage:
+  stage: test
+  image:
+    name: ghcr.io/aquasecurity/trivy:0.19.2
+    entrypoint: [""]
+  variables:
+    TRIVY_USERNAME: $CI_REGISTRY_USER
+    TRIVY_PASSWORD: $CI_REGISTRY_PASSWORD
+    TRIVY_NO_PROGRESS: "true"
+  script:
+    - trivy image $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA | tee -a image_security_scanning_report.txt
+  artifacts:
+    expire_in: 7 days
+    paths:
+      - image_security_scanning_report.txt
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
