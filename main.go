@@ -58,12 +58,12 @@ func verifyClusterHealth(d time.Duration) (err error) {
 		nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			log.Printf("failed to list nodes, retrying: %v", err)
-			i = attempts
+			i = attempts + 1
 		} else {
 			for _, n := range nodes.Items {
 				if !isReady(&n) {
 					log.Printf("node %s is not ready, reseting interval", n.Name)
-					i = attempts
+					i = attempts + 1
 					break
 				}
 			}
@@ -72,6 +72,11 @@ func verifyClusterHealth(d time.Duration) (err error) {
 		if time.Since(start) > waitTimeout {
 			return fmt.Errorf("verify timeout of %s exceeded", waitTimeout.String())
 		}
+
+		if i <= attempts {
+			log.Printf("cluster is healthy, checking again in %s", waitCheckInterval.String())
+		}
+		time.Sleep(waitCheckInterval)
 	}
 
 	return nil
