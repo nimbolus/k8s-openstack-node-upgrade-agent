@@ -1,27 +1,95 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"flag"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/images"
 	"github.com/gophercloud/gophercloud/openstack/compute/v2/servers"
 	"github.com/gophercloud/utils/openstack/clientconfig"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 const (
 	latestImageIDEnvVar = "SYSTEM_UPGRADE_PLAN_LATEST_VERSION"
 	metadataUrl         = "http://169.254.169.254/openstack/latest/meta_data.json"
+	waitCheckInterval   = 10 * time.Second
+	waitTimeout         = time.Hour
 )
 
 type metadata struct {
 	UUID string `json="uuid"`
 }
 
+func isReady(n *v1.Node) bool {
+	var cond v1.NodeCondition
+	for _, c := range n.Status.Conditions {
+		if c.Type == v1.NodeReady {
+			cond = c
+		}
+	}
+	return cond.Status == v1.ConditionTrue
+}
+
+func verifyClusterHealth(d time.Duration) (err error) {
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		log.Fatalf("failed to get kubernetes config: %v", err)
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		log.Fatalf("failed to initialize kubernetes client: %v", err)
+	}
+
+	attempts := d.Seconds() / waitCheckInterval.Seconds()
+	start := time.Now()
+	for i := attempts; i > 0; i-- {
+		nodes, err := clientset.CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			log.Printf("failed to list nodes, retrying: %v", err)
+			i = attempts
+		} else {
+			for _, n := range nodes.Items {
+				if !isReady(&n) {
+					log.Printf("node %s is not ready, reseting interval", n.Name)
+					i = attempts
+					break
+				}
+			}
+		}
+
+		if time.Since(start) > waitTimeout {
+			return fmt.Errorf("verify timeout of %s exceeded", waitTimeout.String())
+		}
+	}
+
+	return nil
+}
+
 func main() {
+	verify := flag.Bool("verify", false, "verify cluster health for a given time peroid")
+	duration := flag.Duration("duration", time.Minute, "duration for verify option")
+	flag.Parse()
+
+	if *verify {
+		if err := verifyClusterHealth(*duration); err != nil {
+			log.Fatal(err)
+		}
+		log.Printf("cluster health verified")
+		os.Exit(0)
+	}
+
 	latestImageID := os.Getenv(latestImageIDEnvVar)
 	if latestImageID == "" {
 		log.Fatalf("no latest image id given, please specify %s in environment", latestImageIDEnvVar)
