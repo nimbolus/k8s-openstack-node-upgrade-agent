@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/gophercloud/gophercloud v0.20.0
 	github.com/gophercloud/utils v0.0.0-20210909165623-d7085207ff6d
+	github.com/gorilla/mux v1.8.0
 	k8s.io/api v0.22.4
 	k8s.io/apimachinery v0.22.4
 	k8s.io/client-go v0.22.4
