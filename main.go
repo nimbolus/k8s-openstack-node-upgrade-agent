@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	versionEnvVar = "SYSTEM_UPGRADE_PLAN_LATEST_VERSION"
+	versionEnvVar   = "SYSTEM_UPGRADE_PLAN_LATEST_VERSION"
+	imageNameEnvVar = "OPENSTACK_IMAGE_NAME"
 )
 
 func main() {
@@ -28,12 +29,14 @@ func main() {
 		}
 		log.Printf("cluster health verified")
 	} else if *instanceUpgrade {
+		latestImageName := os.Getenv(imageNameEnvVar)
 		latestImageID := os.Getenv(versionEnvVar)
+
 		if latestImageID == "" {
-			log.Fatalf("no latest image id given, please specify %s in environment", versionEnvVar)
+			latestImageID = "latest"
 		}
 
-		if err := openstack.UpdateInstanceImage(latestImageID); err != nil {
+		if err := openstack.UpdateInstanceImage(latestImageName, latestImageID); err != nil {
 			log.Fatal(err.Error())
 		}
 	} else if *srvImageChannel {

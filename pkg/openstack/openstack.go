@@ -58,7 +58,7 @@ func getClient(service string) (*gophercloud.ServiceClient, error) {
 	return compute, nil
 }
 
-func UpdateInstanceImage(latestImageID string) error {
+func UpdateInstanceImage(imageName, latestImageID string) error {
 	instanceID, err := getInstanceID()
 	if err != nil {
 		return err
@@ -69,6 +69,13 @@ func UpdateInstanceImage(latestImageID string) error {
 	compute, err := getClient("compute")
 	if err != nil {
 		return err
+	}
+
+	if latestImageID == "latest" {
+		latestImageID, err = getLatestImageID(imageName)
+		if err != nil {
+			return fmt.Errorf("failed to fetch latest image id: %v", err)
+		}
 	}
 
 	image, err := images.Get(compute, latestImageID).Extract()
@@ -104,6 +111,35 @@ func UpdateInstanceImage(latestImageID string) error {
 	return nil
 }
 
+func getLatestImageID(name string) (string, error) {
+	glance, err := getClient("image")
+	if err != nil {
+		return "", fmt.Errorf("failed to initialize openstack glance client: %v", err)
+	}
+
+	opts := glanceImages.ListOpts{
+		Name:   name,
+		Status: "active",
+		Sort:   "created_at:desc",
+	}
+
+	allPages, err := glanceImages.List(glance, opts).AllPages()
+	if err != nil {
+		return "", fmt.Errorf("failed to list glance images: %v", err)
+	}
+
+	allImages, err := glanceImages.ExtractImages(allPages)
+	if err != nil {
+		return "", fmt.Errorf("failed to extract glance images: %v", err)
+	}
+
+	if len(allImages) > 0 {
+		return allImages[0].ID, nil
+	} else {
+		return "", nil
+	}
+}
+
 func ServeImageChannel(addr string) error {
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/openstack/images/{name}/latest", imageChannelHander)
@@ -117,40 +153,17 @@ func imageChannelHander(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("%s requests latest image id for %s", r.RemoteAddr, imageName)
 
-	glance, err := getClient("image")
+	imageID, err := getLatestImageID(imageName)
 	if err != nil {
-		msg := "failed to initialize openstack glance client"
-		http.Error(w, msg, http.StatusInternalServerError)
-		log.Printf("%s: %v", msg, err)
-		return
-	}
-
-	opts := glanceImages.ListOpts{
-		Name:   imageName,
-		Status: "active",
-		Sort:   "created_at:desc",
-	}
-
-	allPages, err := glanceImages.List(glance, opts).AllPages()
-	if err != nil {
-		msg := "failed to list glance images"
-		http.Error(w, msg, http.StatusInternalServerError)
-		log.Printf("%s: %v", msg, err)
-		return
-	}
-
-	allImages, err := glanceImages.ExtractImages(allPages)
-	if err != nil {
-		msg := "failed to extract glance images"
-		http.Error(w, msg, http.StatusInternalServerError)
-		log.Printf("%s: %v", msg, err)
-	} else if len(allImages) > 0 {
-		log.Printf("latest image id for %s is %s", imageName, allImages[0].ID)
-		location := fmt.Sprintf("http://%s/openstack/images/%s/%s", r.Host, imageName, allImages[0].ID)
-		http.Redirect(w, r, location, http.StatusTemporaryRedirect)
-	} else {
-		msg := fmt.Sprintf("no latest image id for %s found", imageName)
+		log.Print(err.Error())
+		http.Error(w, "failed to fetch latest image id", http.StatusInternalServerError)
+	} else if imageID == "" {
+		msg := fmt.Sprintf("no image with name %s found", imageName)
 		log.Print(msg)
 		http.Error(w, msg, http.StatusNotFound)
+	} else {
+		log.Printf("latest image id for %s is %s", imageName, imageID)
+		location := fmt.Sprintf("http://%s/openstack/images/%s/%s", r.Host, imageName, imageID)
+		http.Redirect(w, r, location, http.StatusTemporaryRedirect)
 	}
 }
