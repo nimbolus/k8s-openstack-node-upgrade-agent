@@ -72,6 +72,9 @@ func UpdateInstanceImage(imageName, latestImageID string) error {
 	}
 
 	if latestImageID == "latest" {
+		if imageName == "" {
+			return fmt.Errorf("no image id nor name given")
+		}
 		latestImageID, err = getLatestImageID(imageName)
 		if err != nil {
 			return fmt.Errorf("failed to fetch latest image id: %v", err)
