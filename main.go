@@ -17,7 +17,7 @@ const (
 func main() {
 	verify := flag.Bool("verify", false, "verify cluster health for a given time peroid")
 	duration := flag.Duration("duration", time.Minute, "duration for verify option")
-	instanceUpdate := flag.Bool("instanceUpdate", false, "updates the k8s node instance")
+	instanceUpgrade := flag.Bool("instanceUpgrade", false, "upgrades the k8s node instance")
 	srvImageChannel := flag.Bool("serveImageChannel", true, "serve http endpoint for image channel")
 	flag.Parse()
 
@@ -27,7 +27,7 @@ func main() {
 			log.Fatal(err.Error())
 		}
 		log.Printf("cluster health verified")
-	} else if *instanceUpdate {
+	} else if *instanceUpgrade {
 		latestImageID := os.Getenv(versionEnvVar)
 		if latestImageID == "" {
 			log.Fatalf("no latest image id given, please specify %s in environment", versionEnvVar)

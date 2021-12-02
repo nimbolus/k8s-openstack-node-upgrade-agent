@@ -115,6 +115,8 @@ func ServeImageChannel(addr string) error {
 func imageChannelHander(w http.ResponseWriter, r *http.Request) {
 	imageName := mux.Vars(r)["name"]
 
+	log.Printf("%s requests latest image id for %s", r.RemoteAddr, imageName)
+
 	glance, err := getClient("image")
 	if err != nil {
 		msg := "failed to initialize openstack glance client"
@@ -143,9 +145,12 @@ func imageChannelHander(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusInternalServerError)
 		log.Printf("%s: %v", msg, err)
 	} else if len(allImages) > 0 {
+		log.Printf("latest image id for %s is %s", imageName, allImages[0].ID)
 		location := fmt.Sprintf("http://%s/openstack/images/%s/%s", r.Host, imageName, allImages[0].ID)
 		http.Redirect(w, r, location, http.StatusTemporaryRedirect)
 	} else {
-		http.Error(w, fmt.Sprintf("no latest image id for %s found", imageName), http.StatusNotFound)
+		msg := fmt.Sprintf("no latest image id for %s found", imageName)
+		log.Print(msg)
+		http.Error(w, msg, http.StatusNotFound)
 	}
 }
