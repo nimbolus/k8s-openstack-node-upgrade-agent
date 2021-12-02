@@ -98,7 +98,7 @@ func UpdateInstanceImage(imageName, latestImageID string) error {
 	}
 
 	if image.ID != server.Image["id"] {
-		log.Printf("instance needs to be upgraded from image id %s to %ss", server.Image["id"], image.ID)
+		log.Printf("instance needs to be upgraded from image id %s to %s", server.Image["id"], image.ID)
 
 		rebuildOpts := servers.RebuildOpts{
 			ImageRef: image.ID,
