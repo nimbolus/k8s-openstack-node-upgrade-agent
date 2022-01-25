@@ -2,6 +2,7 @@ stages:
   - compile
   - build
   - test
+  - release
 
 # templates
 .kanikoJob: &kanikoJob
@@ -63,5 +64,24 @@ scanImage:
     expire_in: 7 days
     paths:
       - image_security_scanning_report.txt
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+pages:
+  image: alpine/helm
+  stage: release
+  variables:
+    TEMP_PUBLIC_DIR: $CI_PROJECT_DIR/../public
+  before_script:
+    - mkdir -p $TEMP_PUBLIC_DIR
+    - cd charts
+  script:
+    - "echo \"User-Agent: *\nDisallow: /\" > $TEMP_PUBLIC_DIR/robots.txt"
+    - helm package */ --destination $TEMP_PUBLIC_DIR
+    - helm repo index --url $CI_PAGES_URL $TEMP_PUBLIC_DIR
+    - mv $TEMP_PUBLIC_DIR public
+  artifacts:
+    paths:
+      - public
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
