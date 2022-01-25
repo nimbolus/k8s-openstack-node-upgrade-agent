@@ -5,7 +5,7 @@ It uses [rancher/system-upgrade-controller](https://github.com/rancher/system-up
 
 ## Example
 
-First create a secret named `openstack-clouds` with a `clouds.yaml` configuration file (see [OpenStack docs](https://docs.openstack.org/python-openstackclient/latest/cli/man/openstack.html#config-files)). Then use the following ressource to create an upgrade plan.
+First create a secret named `openstack-clouds` with a `clouds.yaml` configuration file (see [OpenStack docs](https://docs.openstack.org/python-openstackclient/latest/cli/man/openstack.html#config-files)). Then use the following resource to create an upgrade plan.
 
 Upgrade plan:
 ```yaml
@@ -28,14 +28,21 @@ spec:
     # clouds.yaml secret with OpenStack credentials
     - name: openstack-clouds
       path: /etc/openstack
-  # image ID (for testing, later a channel will be used)
-  version: 5a095795-9015-499b-bb03-abf2cbc7e2ab
+  channel: http://k8s-node-upgrade-channel:8080/openstack/images/ubuntu-20.04-ansible/latest
+  # instead of a channel also an image ID can be used by setting the `version` attribute
+  # version: 5a095795-9015-499b-bb03-abf2cbc7e2ab
   drain:
     force: true
   prepare:
-    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent:v0.1.0
+    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent:v0.2.0
     # verify cluster health for one minute before upgrading the next node
     args: ["-verify", "-duration=1m"]
   upgrade:
-    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent:v0.1.0
+    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent:v0.2.0
+    args: ["-instanceUpgrade"]
+    envs:
+      - name: OPENSTACK_IMAGE_NAME
+        value: ubuntu-20.04-ansible
 ```
+
+When an upgrade channel is used checkout `./deploy/upgrade-channel-manifest.yml` for how to deploy a channel service.

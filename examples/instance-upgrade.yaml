@@ -1,0 +1,30 @@
+apiVersion: upgrade.cattle.io/v1
+kind: Plan
+metadata:
+  name: openstack-instance-plan
+  namespace: system-upgrade
+spec:
+  concurrency: 1
+  nodeSelector:
+    matchExpressions:
+      - key: plan.upgrade.cattle.io/openstack-instance
+        operator: Exists
+  tolerations:
+    - key: node-role.kubernetes.io/master
+      operator: Exists
+  serviceAccountName: system-upgrade
+  secrets:
+    - name: openstack-clouds
+      path: /etc/openstack
+  channel: http://node-upgrade-channel/openstack/images/ubuntu-20.04/latest
+  drain:
+    force: true
+  prepare:
+    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent:v0.2.0
+    args: ["-verify", "-duration=30s"]
+  upgrade:
+    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent:v0.2.0
+    args: ["-instanceUpgrade"]
+    envs:
+      - name: OPENSTACK_IMAGE_NAME
+        value: ubuntu-20.04
