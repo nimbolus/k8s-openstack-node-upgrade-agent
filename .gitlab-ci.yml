@@ -79,7 +79,6 @@ pages:
     - "echo \"User-Agent: *\nDisallow: /\" > $TEMP_PUBLIC_DIR/robots.txt"
     - helm package */ --destination $TEMP_PUBLIC_DIR
     - helm repo index --url $CI_PAGES_URL $TEMP_PUBLIC_DIR
-    - mv $TEMP_PUBLIC_DIR public
   artifacts:
     paths:
       - public
