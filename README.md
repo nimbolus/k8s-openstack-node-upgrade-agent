@@ -28,7 +28,7 @@ spec:
     # clouds.yaml secret with OpenStack credentials
     - name: openstack-clouds
       path: /etc/openstack
-  channel: http://k8s-node-upgrade-channel:8080/openstack/images/ubuntu-20.04-ansible/latest
+  channel: http://k8s-node-upgrade-channel:8080/openstack/images/ubuntu-20.04/latest
   # instead of a channel also an image ID can be used by setting the `version` attribute
   # version: 5a095795-9015-499b-bb03-abf2cbc7e2ab
   drain:
@@ -42,7 +42,14 @@ spec:
     args: ["-instanceUpgrade"]
     envs:
       - name: OPENSTACK_IMAGE_NAME
-        value: ubuntu-20.04-ansible
+        value: ubuntu-20.04
 ```
 
 When an upgrade channel is used checkout `./deploy/upgrade-channel-manifest.yml` for how to deploy a channel service.
+
+## Add Helm repo
+
+```sh
+helm repo add nimbolus https://nimbolus.pages.zotha.de/k8s-node-upgrade-agent
+helm repo update
+```

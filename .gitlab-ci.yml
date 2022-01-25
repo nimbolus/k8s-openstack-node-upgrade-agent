@@ -2,7 +2,7 @@ stages:
   - compile
   - build
   - test
-  - release
+  - deploy
 
 # templates
 .kanikoJob: &kanikoJob
@@ -69,12 +69,12 @@ scanImage:
 
 pages:
   image: alpine/helm
-  stage: release
+  stage: deploy
   variables:
-    TEMP_PUBLIC_DIR: $CI_PROJECT_DIR/../public
+    TEMP_PUBLIC_DIR: ../public
   before_script:
-    - mkdir -p $TEMP_PUBLIC_DIR
     - cd charts
+    - mkdir -p $TEMP_PUBLIC_DIR
   script:
     - "echo \"User-Agent: *\nDisallow: /\" > $TEMP_PUBLIC_DIR/robots.txt"
     - helm package */ --destination $TEMP_PUBLIC_DIR

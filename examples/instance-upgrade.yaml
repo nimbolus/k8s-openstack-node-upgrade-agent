@@ -17,6 +17,8 @@ spec:
     - name: openstack-clouds
       path: /etc/openstack
   channel: http://node-upgrade-channel/openstack/images/ubuntu-20.04/latest
+  # instead of a channel also an image ID can be used by setting the `version` attribute
+  # version: 5a095795-9015-499b-bb03-abf2cbc7e2ab
   drain:
     force: true
   prepare:
