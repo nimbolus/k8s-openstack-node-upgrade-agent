@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: registry.zotha.de/nimbolus/k8s-node-upgrade-agent
+  repository: registry.zotha.de/nimbolus/k8s-openstack-node-upgrade-agent
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""

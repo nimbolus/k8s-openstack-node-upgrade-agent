@@ -25,4 +25,4 @@
 
 # End of https://www.toptal.com/developers/gitignore/api/go
 
-k8s-node-upgrade-agent
+k8s-openstack-node-upgrade-agent

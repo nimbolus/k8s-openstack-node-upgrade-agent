@@ -23,4 +23,4 @@ version: 0.1.0
 # It is recommended to use it with quotes.
 appVersion: "0.2.0"
 
-home: https://github.com/nimbolus/k8s-node-upgrade-agent
+home: https://github.com/nimbolus/k8s-openstack-node-upgrade-agent

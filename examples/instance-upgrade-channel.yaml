@@ -22,10 +22,10 @@ spec:
   drain:
     force: true
   prepare:
-    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent
+    image: registry.zotha.de/nimbolus/k8s-openstack-node-upgrade-agent
     args: ["-verify", "-duration=30s"]
   upgrade:
-    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent
+    image: registry.zotha.de/nimbolus/k8s-openstack-node-upgrade-agent
     args: ["-instanceUpgrade"]
     envs:
       # set image name for upgrade process (remember to update it in the channel URL also)

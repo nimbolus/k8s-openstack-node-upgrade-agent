@@ -17,11 +17,11 @@ compile:
   stage: compile
   image: golang:1.16-alpine
   script:
-    - GOOS=linux CGO_ENABLED=0 go build -o k8s-node-upgrade-agent
+    - GOOS=linux CGO_ENABLED=0 go build -o k8s-openstack-node-upgrade-agent
   artifacts:
     name: ${CI_PROJECT_NAME}-${CI_COMMIT_REF_NAME}
     paths:
-      - k8s-node-upgrade-agent
+      - k8s-openstack-node-upgrade-agent
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'

@@ -1,4 +1,4 @@
-module github.com/nimbolus/k8s-node-upgrade-agent
+module github.com/nimbolus/k8s-openstack-node-upgrade-agent
 
 go 1.17
 

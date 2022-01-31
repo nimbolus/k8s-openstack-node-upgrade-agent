@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/nimbolus/k8s-node-upgrade-agent/pkg/health"
-	"github.com/nimbolus/k8s-node-upgrade-agent/pkg/openstack"
+	"github.com/nimbolus/k8s-openstack-node-upgrade-agent/pkg/health"
+	"github.com/nimbolus/k8s-openstack-node-upgrade-agent/pkg/openstack"
 )
 
 const (
