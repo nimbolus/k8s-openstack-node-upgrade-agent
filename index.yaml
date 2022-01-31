@@ -1,0 +1,27 @@
+apiVersion: v1
+entries:
+  node-upgrade-channel:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2022-01-31T18:40:52.132873272Z"
+    description: OpenStack node upgrade channel for system-upgrade-controller
+    digest: 9777728e3c6417f527d59663c7d887415a12bd5b6cfd6f155fefd3e0c2ef3ff7
+    home: https://github.com/nimbolus/k8s-openstack-node-upgrade-agent
+    name: node-upgrade-channel
+    type: application
+    urls:
+    - https://github.com/nimbolus/k8s-openstack-node-upgrade-agent/releases/download/node-upgrade-channel-0.1.0/node-upgrade-channel-0.1.0.tgz
+    version: 0.1.0
+  system-upgrade-controller:
+  - apiVersion: v2
+    appVersion: v0.8.1
+    created: "2022-01-31T18:40:52.306155647Z"
+    description: Kubernetes-native upgrade controller (for nodes)
+    digest: 17079232aaadfab3b067cccdf2f07238910fb03b3f3e9b3fc1cea30702834b01
+    home: https://github.com/rancher/system-upgrade-controller
+    name: system-upgrade-controller
+    type: application
+    urls:
+    - https://github.com/nimbolus/k8s-openstack-node-upgrade-agent/releases/download/system-upgrade-controller-0.1.0/system-upgrade-controller-0.1.0.tgz
+    version: 0.1.0
+generated: "2022-01-31T18:40:51.873031113Z"
