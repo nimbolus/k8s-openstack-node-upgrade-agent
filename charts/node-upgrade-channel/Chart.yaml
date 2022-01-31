@@ -1,6 +1,6 @@
 apiVersion: v2
 name: node-upgrade-channel
-description: A Helm chart for Kubernetes
+description: OpenStack node upgrade channel for system-upgrade-controller
 
 # A chart can be either an 'application' or a 'library' chart.
 #
