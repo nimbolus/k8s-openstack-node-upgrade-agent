@@ -49,14 +49,3 @@ Selector labels
 app.kubernetes.io/name: {{ include "system-upgrade-controller.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
-
-{{/*
-Create the name of the service account to use
-*/}}
-{{- define "system-upgrade-controller.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "system-upgrade-controller.fullname" .) .Values.serviceAccount.name }}
-{{- else }}
-{{- default "default" .Values.serviceAccount.name }}
-{{- end }}
-{{- end }}

@@ -95,4 +95,4 @@ secret:
         auth_type: "v3applicationcredential"
         identity_api_version: 3
         interface: "public"
-        region_name: "eu-central-1"
+        region_name: "RegionOne"

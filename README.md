@@ -1,55 +1,46 @@
 # k8s-node-upgrade-agent
 
-Upgrade agent for OpenStack-based Kubernetes nodes, which use regular updated Glance images.
-It uses [rancher/system-upgrade-controller](https://github.com/rancher/system-upgrade-controller) to drain the Kubernetes nodes one by one and rebuild the OpenStack instance with the latest image revision.
+Upgrade agent for OpenStack-based Kubernetes nodes, which are based on regular updated Glance images.
+It uses [rancher/system-upgrade-controller](https://github.com/rancher/system-upgrade-controller) to drain the Kubernetes nodes one by one and rebuild the OpenStack instance with the latest image revision. It's also possible to migrate to another operating system by switching to a new image.
 
-## Example
+The upgrade process assumes that the OpenStack instances will provision itself via cloud-init after they got rebuilt. Also the cluster state should be stored elsewhere, e.g. in an OpenStack volume. Checkout [nimbolus/tf-k3s](https://github.com/nimbolus/tf-k3s) for such Kubernetes deployment.
 
-First create a secret named `openstack-clouds` with a `clouds.yaml` configuration file (see [OpenStack docs](https://docs.openstack.org/python-openstackclient/latest/cli/man/openstack.html#config-files)). Then use the following resource to create an upgrade plan.
-
-Upgrade plan:
-```yaml
-apiVersion: upgrade.cattle.io/v1
-kind: Plan
-metadata:
-  name: openstack-instance-plan
-  namespace: system-upgrade
-spec:
-  concurrency: 1
-  nodeSelector:
-    matchExpressions:
-      - key: plan.upgrade.cattle.io/openstack-instance
-        operator: Exists
-  tolerations:
-    - key: node-role.kubernetes.io/master
-      operator: Exists
-  serviceAccountName: system-upgrade
-  secrets:
-    # clouds.yaml secret with OpenStack credentials
-    - name: openstack-clouds
-      path: /etc/openstack
-  channel: http://k8s-node-upgrade-channel:8080/openstack/images/ubuntu-20.04/latest
-  # instead of a channel also an image ID can be used by setting the `version` attribute
-  # version: 5a095795-9015-499b-bb03-abf2cbc7e2ab
-  drain:
-    force: true
-  prepare:
-    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent:v0.2.0
-    # verify cluster health for one minute before upgrading the next node
-    args: ["-verify", "-duration=1m"]
-  upgrade:
-    image: registry.zotha.de/nimbolus/k8s-node-upgrade-agent:v0.2.0
-    args: ["-instanceUpgrade"]
-    envs:
-      - name: OPENSTACK_IMAGE_NAME
-        value: ubuntu-20.04
-```
-
-When an upgrade channel is used checkout `./deploy/upgrade-channel-manifest.yml` for how to deploy a channel service.
-
-## Add Helm repo
+## Usage
 
 ```sh
-helm repo add nimbolus https://nimbolus.pages.zotha.de/k8s-node-upgrade-agent
-helm repo update
+./k8s-node-upgrade-agent --help
+  -duration duration
+    	duration for verify option (default 1m0s)
+  -instanceUpgrade
+    	upgrades the k8s node instance
+  -serveImageChannel
+    	serve http endpoint for image channel (default true)
+  -verify
+    	verify cluster health for a given time period
 ```
+
+## Deployment
+
+First deploy the [rancher/system-upgrade-controller](https://github.com/rancher/system-upgrade-controller#deploying):
+```sh
+helm repo add nimbolus-k8s-node-upgrade-agent https://nimbolus.github.io/k8s-node-upgrade-agent
+helm repo update
+helm install -n system-upgrade --create-namespace system-upgrade-controller nimbolus-k8s-node-upgrade-agent/system-upgrade-controller
+```
+
+### Upgrade cluster to a given image version
+
+After the system-upgrade-controller is ready, create a secret named `openstack-clouds` with OpenStack credentials like shown in [examples/openstack-clouds.yaml](./examples/openstack-clouds.yaml) (see also [OpenStack docs](https://docs.openstack.org/python-openstackclient/latest/cli/man/openstack.html#config-files)).
+
+Then checkout [examples/instance-upgrade-manual.yaml](./examples/instance-upgrade-manual.yaml) for an example upgrade plan.
+
+### Use a channel for regular upgrades
+
+On OpenStack clouds where images get rebuild regularly to include the latest kernels and security patches, the system-upgrade-controller needs a channel endpoint to check for new image IDs. The k8s-node-upgrade-agent can also fullfil this requirement by serving an HTTP endpoint, which returns the latest ID for a given OpenStack image name.
+
+After the system-upgrade-controller is ready, deploy the node-upgrade-channel, remember to set the OpenStack credentials in the Helm values:
+```sh
+helm install -n system-upgrade -f value_overrides.yaml system-upgrade-controller nimbolus-k8s-node-upgrade-agent/node-upgrade-channel
+```
+
+Finally checkout [examples/instance-upgrade-channel.yaml](./examples/instance-upgrade-channel.yaml) for an example upgrade plan.

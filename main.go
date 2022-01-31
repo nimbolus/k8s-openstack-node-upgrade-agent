@@ -16,7 +16,7 @@ const (
 )
 
 func main() {
-	verify := flag.Bool("verify", false, "verify cluster health for a given time peroid")
+	verify := flag.Bool("verify", false, "verify cluster health for a given time period")
 	duration := flag.Duration("duration", time.Minute, "duration for verify option")
 	instanceUpgrade := flag.Bool("instanceUpgrade", false, "upgrades the k8s node instance")
 	srvImageChannel := flag.Bool("serveImageChannel", true, "serve http endpoint for image channel")
