@@ -13,19 +13,6 @@ stages:
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
 
 # jobs
-compile:
-  stage: compile
-  image: golang:1.16-alpine
-  script:
-    - GOOS=linux CGO_ENABLED=0 go build -o k8s-openstack-node-upgrade-agent
-  artifacts:
-    name: ${CI_PROJECT_NAME}-${CI_COMMIT_REF_NAME}
-    paths:
-      - k8s-openstack-node-upgrade-agent
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
-    - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
-
 buildImage:
   stage: build
   <<: *kanikoJob
@@ -33,8 +20,6 @@ buildImage:
     - /kaniko/executor --cache --context $CI_PROJECT_DIR
       --dockerfile $CI_PROJECT_DIR/Dockerfile
       --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
-  needs:
-    - job: compile
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
