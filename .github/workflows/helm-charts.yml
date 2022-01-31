@@ -19,7 +19,7 @@ jobs:
         with:
           files: |
             charts/**/*
-            .github/workflows/helm-charts.yml
+            .github/workflows/**/*
 
       - name: Configure Git
         if: steps.changed-files.outputs.any_changed == 'true'

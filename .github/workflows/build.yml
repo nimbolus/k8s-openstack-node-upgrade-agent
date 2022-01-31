@@ -31,6 +31,7 @@ jobs:
             **/*.go
             go.*
             Dockerfile
+            .github/workflows/**/*
 
       - name: Log in to the Container registry
         if: steps.changed-files.outputs.any_changed == 'true'
